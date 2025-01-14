@@ -192,7 +192,7 @@ public:
     /// \enum VoxelPoolingMode
     ///
     /// \brief Possible ways of determining voxel color from PointCloud.
-    enum class VoxelPoolingMode { AVG, MIN, MAX, SUM };
+    enum class VoxelPoolingMode { AVG, MIN, MAX, SUM, MODE };
 
     /// Creates a VoxelGrid from a given PointCloud. The color value of a given
     /// voxel is determined by the VoxelPoolingMode, e.g. by default the average
@@ -206,7 +206,7 @@ public:
     static std::shared_ptr<VoxelGrid> CreateFromPointCloud(
             const PointCloud &input,
             double voxel_size,
-            VoxelPoolingMode color_mode = VoxelPoolingMode::AVG);
+            VoxelPoolingMode color_mode = VoxelPoolingMode::MODE);
 
     /// Creates a VoxelGrid from a given PointCloud. The color value of a given
     /// voxel is determined by the VoxelPoolingMode, e.g. by default the average
@@ -224,7 +224,7 @@ public:
             double voxel_size,
             const Eigen::Vector3d &min_bound,
             const Eigen::Vector3d &max_bound,
-            VoxelPoolingMode color_mode = VoxelPoolingMode::AVG);
+            VoxelPoolingMode color_mode = VoxelPoolingMode::MODE);
 
     /// Creates a VoxelGrid from a given TriangleMesh. No color information is
     /// converted. The bounds of the created VoxelGrid are computed from the
@@ -315,17 +315,12 @@ public:
     AggColorVoxel()
         : num_of_points_(0),
           color_(0.0, 0.0, 0.0),
-          min_color_(Eigen::Vector3d::Constant(
-                  std::numeric_limits<double>::max())),
-          max_color_(Eigen::Vector3d::Constant(
-                  std::numeric_limits<double>::lowest())) {}
+          min_color_(Eigen::Vector3d::Constant(std::numeric_limits<double>::max())),
+          max_color_(Eigen::Vector3d::Constant(std::numeric_limits<double>::lowest())) {}
 
-public:
     void Add(const Eigen::Vector3i &voxel_index) {
         if (num_of_points_ > 0 && voxel_index != voxel_index_) {
-            utility::LogWarning(
-                    "Tried to aggregate ColorVoxel with different "
-                    "voxel_index");
+            utility::LogWarning("Tried to aggregate ColorVoxel with different voxel_index");
         }
         voxel_index_ = voxel_index;
     }
@@ -336,6 +331,9 @@ public:
         num_of_points_++;
         min_color_ = min_color_.cwiseMin(color);
         max_color_ = max_color_.cwiseMax(color);
+        
+        // Update color frequency for MODE
+        color_frequency_[color]++;
     }
 
     Eigen::Vector3i GetVoxelIndex() const { return voxel_index_; }
@@ -354,6 +352,17 @@ public:
 
     Eigen::Vector3d GetSumColor() const { return color_; }
 
+    Eigen::Vector3d GetModeColor() const {
+        Eigen::Vector3d mode_color(0.0, 0.0, 0.0);
+        int max_count = 0;
+        for (const auto &entry : color_frequency_) {
+            if (entry.second > max_count) {
+                max_count = entry.second;
+                mode_color = entry.first;
+            }
+        }
+        return mode_color;
+    }
 public:
     int num_of_points_;
     Eigen::Vector3i voxel_index_;
@@ -362,6 +371,7 @@ public:
 private:
     Eigen::Vector3d min_color_;
     Eigen::Vector3d max_color_;
+    std::unordered_map<Eigen::Vector3d, int, utility::hash_eigen<Eigen::Vector3d>> color_frequency_;
 };
 
 }  // namespace geometry

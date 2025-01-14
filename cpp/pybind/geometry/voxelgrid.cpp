@@ -70,7 +70,8 @@ void pybind_voxelgrid_definitions(py::module &m) {
     pooling_mode.value("AVG", VoxelGrid::VoxelPoolingMode::AVG)
             .value("MIN", VoxelGrid::VoxelPoolingMode::MIN)
             .value("MAX", VoxelGrid::VoxelPoolingMode::MAX)
-            .value("SUM", VoxelGrid::VoxelPoolingMode::SUM);
+            .value("SUM", VoxelGrid::VoxelPoolingMode::SUM)
+            .value("MODE", VoxelGrid::VoxelPoolingMode::MODE);
 
     py::detail::bind_default_constructor<VoxelGrid>(voxelgrid);
     py::detail::bind_copy_functions<VoxelGrid>(voxelgrid);
@@ -139,22 +140,22 @@ void pybind_voxelgrid_definitions(py::module &m) {
                         &VoxelGrid::CreateFromPointCloud,
                         "Creates a VoxelGrid from a given PointCloud. The "
                         "color value of a given  voxel is determined by the "
-                        "VoxelPoolingMode, e.g. by default the average color "
+                        "VoxelPoolingMode, e.g. by default the mode color "
                         "value of the points that fall into it (if the "
                         "PointCloud has colors). The bounds of the created "
                         "VoxelGrid are computed from the PointCloud.",
                         "input"_a, "voxel_size"_a,
-                        "pooling_mode"_a = VoxelGrid::VoxelPoolingMode::AVG)
+                        "pooling_mode"_a = VoxelGrid::VoxelPoolingMode::MODE)
             .def_static("create_from_point_cloud_within_bounds",
                         &VoxelGrid::CreateFromPointCloudWithinBounds,
                         "Creates a VoxelGrid from a given PointCloud. The "
                         "color value of a given voxel is determined by the "
-                        "VoxelPoolingMode, e.g. by default the average color "
+                        "VoxelPoolingMode, e.g. by default the mode color "
                         "value of the points that fall into it (if the "
                         "PointCloud has colors). The bounds of the created "
                         "VoxelGrid are defined by the given parameters.",
                         "input"_a, "voxel_size"_a, "min_bound"_a, "max_bound"_a,
-                        "pooling_mode"_a = VoxelGrid::VoxelPoolingMode::AVG)
+                        "pooling_mode"_a = VoxelGrid::VoxelPoolingMode::MODE)
             .def_static("create_from_triangle_mesh",
                         &VoxelGrid::CreateFromTriangleMesh,
                         "Creates a VoxelGrid from a given TriangleMesh. No "

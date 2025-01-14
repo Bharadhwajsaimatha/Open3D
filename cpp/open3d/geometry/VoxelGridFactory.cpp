@@ -76,17 +76,18 @@ std::shared_ptr<VoxelGrid> VoxelGrid::CreateFromPointCloudWithinBounds(
         }
     }
     for (auto accpoint : voxelindex_to_accpoint) {
-        const Eigen::Vector3i &grid_index = accpoint.second.GetVoxelIndex();
-        // clang-format off
-        const Eigen::Vector3d &color = has_colors ?
-            (pooling_mode == VoxelPoolingMode::AVG ? accpoint.second.GetAverageColor()
-            : pooling_mode == VoxelPoolingMode::MIN ? accpoint.second.GetMinColor()
-            : pooling_mode == VoxelPoolingMode::MAX ? accpoint.second.GetMaxColor()
-            : pooling_mode == VoxelPoolingMode::SUM ? accpoint.second.GetSumColor()
-            : Eigen::Vector3d::Zero())
-            : Eigen::Vector3d::Zero();
-        // clang-format on
-        output->AddVoxel(geometry::Voxel(grid_index, color));
+    const Eigen::Vector3i &grid_index = accpoint.second.GetVoxelIndex();
+    // clang-format off
+    const Eigen::Vector3d &color = has_colors ?
+        (pooling_mode == VoxelPoolingMode::AVG ? accpoint.second.GetAverageColor()
+        : pooling_mode == VoxelPoolingMode::MIN ? accpoint.second.GetMinColor()
+        : pooling_mode == VoxelPoolingMode::MAX ? accpoint.second.GetMaxColor()
+        : pooling_mode == VoxelPoolingMode::SUM ? accpoint.second.GetSumColor()
+        : pooling_mode == VoxelPoolingMode::MODE ? accpoint.second.GetModeColor() // New mode handling
+        : Eigen::Vector3d::Zero())
+        : Eigen::Vector3d::Zero();
+    // clang-format on
+    output->AddVoxel(geometry::Voxel(grid_index, color));
     }
     utility::LogDebug(
             "Pointcloud is voxelized from {:d} points to {:d} voxels.",
